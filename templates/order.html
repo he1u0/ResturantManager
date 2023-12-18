@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set uname = user_name if user_name else '' %}
+{% block title %}Welcome  {{ uname }}{% endblock %}
+{% block body %}
+
+<p>欢迎光临 请订餐</p>
+  <table border="0.5">
+    <tr>
+     <th>编号</th>
+     <th>菜名</th>
+     <th>价格</th>
+     <th>描述</th>
+     <th>商家</th>
+    </tr>
+
+  {% for oneShangJia in cp %}
+    {% for oneCp in oneShangJia %}
+      <tr>
+        <td>{{ oneCp.id }}</td>
+        <td>{{ oneCp.cname }}</td>
+        <td>{{ oneCp.cprice }}</td>
+        <td>{{ oneCp.cdis }}</td>
+        <td>{{ oneCp.utxt}}</td>
+      </tr>
+    {% endfor %}
+    <tr></tr>
+  {% endfor %}
+  </table>
+<p></p>
+<p></p>
+<p>请填写需要的菜品编号，数量以及联系方式</p>
+<form method="post">
+  <label>编号: <input name="cid"></label>
+  <label>数量：<input name="orderName"></label>
+  <label>联系方式：<input name="phone"></label>
+  {% if user_name %}
+  <button type="submit">确认订单</button> |
+  <a href="/logout">Log out</a>
+  {% else %}
+  <a href="/login">订餐前请登录</a>
+  {% endif %}
+</form>
+{% endblock %}

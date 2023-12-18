@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Welcome, {{ user_name }}{% endblock %}
+{% block body %}
+{% for message in flash_messages %}
+  <div class="flash_message">{{ message }}<a href="/">&times;</a></div>
+{% endfor %}
+<p>您的账单</p>
+<ul>
+  {% for p in payments %}
+    {% set prep = 'from' if (p.credit == user_name) else 'to' %}
+    {% set acct = p.debit if (p.credit == user_name) else p.credit %}
+    <li class="{{ prep }}">${{ p.dollars }} {{ prep }} <b>{{ acct }}</b>
+    for: <i>{{ p.memo }}</i></li>
+  {% endfor %}
+</ul>
+<a href="/pay">付款</a> | <a href="/logout">退出登录</a>
+{% endblock %}
