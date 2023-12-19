@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}欢迎用户:{{ user_name }}{% endblock %}
+{% block body %}
+    <p>{{ user_name }}的账单</p>
+    <table border="1">
+        <caption>订单详情</caption>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>UID</th>
+            <th>SID</th>
+            <th>CID</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.uid }}</td>
+                <td>{{ order.sid }}</td>
+                <td>{{ order.cid }}</td>
+                <td>{{ order.status }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <a href="/pay">付款</a> | <a href="/logout">退出登录</a>
+{% endblock %}

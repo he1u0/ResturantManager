@@ -1,9 +1,9 @@
 # 对于食堂这个应用 需要建立三个数据库
 # user:     存储用户相关内容 用户ID 账号 密码 角色
-#           角色 0:顾客  1:商家
-# cai ping:  存储菜品相关内容 菜品ID 菜名 描述 价格 商家账号
-# ding dan:  存储订单内容 订单ID 顾客ID 商家ID 菜品ID 订单状态
-#           状态：0:等待接单  1:正在制作  2:正在派送  3:订单完成
+# role:     角色 0:顾客  1:商家
+# cai ping: 存储菜品相关内容 菜品ID 菜名 描述 价格 商家账号
+# ding dan: 存储订单内容 订单ID 顾客ID 商家ID 菜品ID 订单状态
+# status:   状态：0:等待接单  1:正在制作  2:正在派送  3:订单完成
 
 import os
 import sqlite3
@@ -17,8 +17,8 @@ def open_database(path='database.db'):
         c = db.cursor()
         # 创建用户表
         c.execute('CREATE TABLE user (id INTEGER PRIMARY KEY, uname TEXT, upw TEXT, urole INTEGER, utext TEXT)')
-        add_user(db, 'zhang', '123456', 0, '')
-        add_user(db, 'li', '123456', 0, '')
+        add_user(db, 'zhang', '123456', 0, '测试用户1')
+        add_user(db, 'li', '123456', 0, '测试用户2')
         add_user(db, 'ma', '123456', 1, '大胡子面片')
         add_user(db, 'zhao', '123456', 1, '小赵炒饭')
 
@@ -32,7 +32,7 @@ def open_database(path='database.db'):
 
         # 创建订单表
         c.execute('Create Table dingdan (id Integer Primary Key,'
-                  'uid, sid, cid, dstatu)')
+                  'uid, sid, cid, status)')
         add_order(db, 1, 1)
         add_order(db, 2, 3)
         # 创建订单表
@@ -54,9 +54,8 @@ def add_order(db, uid, cid):
     else:
         print('无法找到菜品ID为 {} 的商家ID'.format(cid))
         return
-
     # 写入数据库
-    db.cursor().execute('insert into dingdan (uid, sid, cid, dstatu)'
+    db.cursor().execute('insert into dingdan (uid, sid, cid, status)'
                         ' values (?, ?, ?, 0)', (uid, sid, cid))
 
 
@@ -95,19 +94,18 @@ def get_all_menu(db):
 
     if len(temp_goods) > 0:
         cp.append(temp_goods)
-
     return cp
 
 
 # 创建用户
-def add_user(db, uname, upw, urole, utext):
+def add_user(db, uname, pwd, role, text):
     db.cursor().execute('insert into user (uname, upw, urole, utext)'
-                        ' values (?, ?, ?, ?)', (uname, upw, urole, utext))
+                        ' values (?, ?, ?, ?)', (uname, pwd, role, text))
 
 
 # 基于用户ID获取订单
 # u_or_s 0:u  1:s
-def get_dingdan_by_id(db, id, u_or_s):
+def get_order_by_id(db, id, u_or_s):
     c = db.cursor()
     if u_or_s == 0:
         c.execute("select * from dingdan where uid = ? ", (id,))
@@ -129,7 +127,10 @@ def get_user_by_name(db, uname):
 # 获取当前用户的订单信息
 def get_user_order(db, uid):
     order_list = []
-    return order_list
+    c = db.cursor()
+    c.execute("select * from dingdan where uid =?", (uid,))
+    Row = namedtuple('Row', [tup[0] for tup in c.description])
+    return [Row(*row) for row in c.fetchall()]
 
 
 # 检查用户是否存在 以及对密码进行验证
@@ -141,6 +142,13 @@ def check_user(db, uname, upw):
         return 2, '密码错误'
     else:
         return 0, user[0].urole, user[0].id
+
+# 获取菜品
+def get_cp(db, id):
+    c = db.cursor()
+    c.execute("select * from caiping where id = ? ", (id,))
+    Row = namedtuple('Row', [tup[0] for tup in c.description])
+    return [Row(*row) for row in c.fetchall()]
 
 
 if __name__ == '__main__':
