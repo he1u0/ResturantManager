@@ -1,12 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Please log in{% endblock %}
+{% block title %}请登录{% endblock %}
 {% block body %}
     <form method="post">
-        <label>User: <input name="user_name" value="{{ user_name }}"></label>
-        <label>Password: <input name="password" type="password"></label>
-        <button type="submit">Log in</button>
+        <label>用户名: <input name="user_name" value="{{ user_name }}"></label>
+        <label>密码: <input name="password" type="password"></label>
+        <button type="submit">登录</button>
         <p></p>
         <label class="err"> {{ err_info }} </label>
-
     </form>
 {% endblock %}

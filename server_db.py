@@ -75,10 +75,10 @@ def add_goods(db, cname, cdis, uid, cprice):
 # 获取所有菜品
 def get_all_menu(db):
     # 以饭馆分组，获取所有菜品
-    c = db.cursor()
-    c.execute('select * from caiping order by uid')
-    Row = namedtuple('Row', [tup[0] for tup in c.description])
-    all_cp = [Row(*row) for row in c.fetchall()]
+    cursor = db.cursor()
+    cursor.execute('select * from caiping order by uid')
+    Row = namedtuple('Row', [tup[0] for tup in cursor.description])
+    all_cp = [Row(*row) for row in cursor.fetchall()]
     last_id = -1
     cp = []
     temp_goods = []
@@ -91,7 +91,6 @@ def get_all_menu(db):
 
         temp_goods.append(oneRow)
         last_id = oneRow.uid
-
     if len(temp_goods) > 0:
         cp.append(temp_goods)
     return cp
@@ -99,36 +98,28 @@ def get_all_menu(db):
 
 # 创建用户
 def add_user(db, uname, pwd, role, text):
-    db.cursor().execute('insert into user (uname, upw, urole, utext)'
-                        ' values (?, ?, ?, ?)', (uname, pwd, role, text))
+    cursor = db.cursor()
+    cursor.execute('insert into user (uname, upw, urole, utext)'
+                   ' values (?, ?, ?, ?)', (uname, pwd, role, text))
+    cursor.connection.commit()
 
 
 # 基于用户ID获取订单
 # u_or_s 0:u  1:s
 def get_order_by_id(db, id, u_or_s):
-    c = db.cursor()
+    cursor = db.cursor()
     if u_or_s == 0:
-        c.execute("select * from dingdan where uid = ? ", (id,))
+        cursor.execute("select * from dingdan where uid = ? ", (id,))
     else:
-        c.execute("select * from dingdan where sid = ? ", (id,))
-
-    Row = namedtuple('Row', [tup[0] for tup in c.description])
-    return [Row(*row) for row in c.fetchall()]
+        cursor.execute("select * from dingdan where sid = ? ", (id,))
+    rows = cursor.fetchall()
+    return rows
 
 
 # 基于用户名获取用户所有信息
 def get_user_by_name(db, uname):
     c = db.cursor()
     c.execute("select * from user where uname = ? ", (uname,))
-    Row = namedtuple('Row', [tup[0] for tup in c.description])
-    return [Row(*row) for row in c.fetchall()]
-
-
-# 获取当前用户的订单信息
-def get_user_order(db, uid):
-    order_list = []
-    c = db.cursor()
-    c.execute("select * from dingdan where uid =?", (uid,))
     Row = namedtuple('Row', [tup[0] for tup in c.description])
     return [Row(*row) for row in c.fetchall()]
 
@@ -143,12 +134,40 @@ def check_user(db, uname, upw):
     else:
         return 0, user[0].urole, user[0].id
 
+
+# 根据用户id获取用户名
+def get_user_by_id(db, user_id_to_retrieve):
+    cursor = db.cursor()
+    cursor.execute("select * from user where id = ? ", (user_id_to_retrieve,))
+    _user = cursor.fetchone()
+    if _user:
+        return _user[1]
+    return None
+
+
+# 根据菜品id获取菜名
+def get_dish_name_by_id(db, dish_id):
+    cursor = db.cursor()
+    cursor.execute("select * from caiping where id = ? ", (dish_id,))
+    _dish = cursor.fetchone()
+    if _dish:
+        return _dish[1]
+    return None
+
+
 # 获取菜品
 def get_cp(db, id):
     c = db.cursor()
     c.execute("select * from caiping where id = ? ", (id,))
     Row = namedtuple('Row', [tup[0] for tup in c.description])
     return [Row(*row) for row in c.fetchall()]
+
+
+# 更新订单状态
+def update_order_status(db, order_id, status=1):
+    cursor = db.cursor()
+    cursor.execute("update dingdan set status = ? where id = ?", (status, order_id,))
+    cursor.connection.commit()
 
 
 if __name__ == '__main__':

@@ -1,8 +1,9 @@
 from flask import Flask, redirect, request, url_for
 from jinja2 import Environment, PackageLoader
 
+import data_list
 import server_db as db
-from templates.data_list import OrderList
+from data_list import OrderList
 
 app = Flask(__name__)
 get = Environment(loader=PackageLoader('server', 'templates')).get_template
@@ -44,10 +45,6 @@ def manager():  # 用户管理
 @app.route('/', methods=['GET', 'POST'])
 def order():  # 定菜
     user_name = request.cookies.get('user_name')
-    user_role = request.cookies.get('role')
-    # if user_name and user_role == '1':  # 有用户登录且用户角色为商家 则转入商家管理
-    #     return redirect(url_for('manager'))
-    # 否则进入用户定餐界面
     if request.method == 'POST':
         # 获取菜品ID
         cid = request.form.get('cid')
@@ -56,20 +53,32 @@ def order():  # 定菜
         # 创建新的订单
         local_db = db.open_database()
         db.add_order(local_db, uid, cid)
-        orders = db.get_order_by_id(db.open_database(), request.cookies.get('uid'), 0)
-        # 转换一下
-        order_list = []
-        for order in orders:
-            all_cp = db.get_order_by_id(db.open_database(), request.cookies.get('uid'), 0)
-            order_list.append(OrderList(order_id=order.id,
-                                        s_name=db.get_cp(db.open_database(), order.cid),
-                                        c_name=db.open_database()[order.id],
-                                        status="正在制作"))
-            order_list.append(orders)
         local_db.commit()
-        return get('order_list.html').render(user_name=user_name, orders=orders)
+        orders = db.get_order_by_id(db.open_database(), request.cookies.get('uid'), 0)
+        order_list = []
+        for _order in orders:
+            _id = _order[0]
+            _uid = _order[1]
+            _sid = _order[2]
+            _cid = _order[3]
+            _status = _order[4]
+            _user_name = db.get_user_by_id(local_db, _uid)
+            _business_name = db.get_user_by_id(local_db, _sid)
+            _dish_name = db.get_dish_name_by_id(local_db, _cid)
+            _status_str = data_list.get_status(_status)
+            order_list.append(
+                OrderList(order_id=_id, user_name=_user_name, business_name=_business_name, dish_name=_dish_name,
+                          status=_status_str)
+            )
+        local_db.close()
+        return get('order_list.html').render(user_name=user_name, orders=order_list)
     all_course = db.get_all_menu(db.open_database())
     return get('order.html').render(cp=all_course, user_name=user_name)
+
+
+@app.route('/pay')
+def pay():
+    return get('pay_success.html').render()
 
 
 if __name__ == '__main__':
